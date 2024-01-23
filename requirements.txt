@@ -1,0 +1,12 @@
+diffusers==0.25.0
+transformers==4.36.2
+accelerate
+safetensors
+einops
+onnxruntime
+spaces==0.19.4
+omegaconf
+peft
+huggingface-hub==0.20.2
+opencv-python
+insightface
