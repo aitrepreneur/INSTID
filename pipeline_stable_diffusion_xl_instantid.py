@@ -512,7 +512,7 @@ class StableDiffusionXLInstantIDPipeline(StableDiffusionXLControlNetPipeline):
     def set_image_proj_model(self, model_ckpt, image_emb_dim=512, num_tokens=16):
         
         image_proj_model = Resampler(
-            dim=1024,
+            dim=1280,
             depth=4,
             dim_head=64,
             heads=20,
