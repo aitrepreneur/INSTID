@@ -424,4 +424,4 @@ with gr.Blocks(css=css) as demo:
     
     gr.Markdown(article)
 
-demo.launch(share=False)
+demo.launch(share=True)
