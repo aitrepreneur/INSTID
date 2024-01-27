@@ -54,7 +54,7 @@ controlnet_path = f'./checkpoints/ControlNetModel'
 controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch_dtype)
 
 # base_model_path = 'wangqixun/YamerMIX_v8'
-base_model_path = 'stabilityai/stable-diffusion-xl-base-1.0'
+base_model_path = 'stablediffusionapi/juggernaut-xl-v7'
 
 pipe = StableDiffusionXLInstantIDPipeline.from_pretrained(
     base_model_path,
