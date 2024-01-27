@@ -5,6 +5,7 @@ import math
 import torch
 import random
 import numpy as np
+import argparse
 
 import PIL
 from PIL import Image
@@ -53,27 +54,9 @@ controlnet_path = f'./checkpoints/ControlNetModel'
 #controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch.float16)
 controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch_dtype)
 
-base_model_path = 'wangqixun/YamerMIX_v8'
+#base_model_path = 'stablediffusionapi/juggernaut-xl-v7'
 
-pipe = StableDiffusionXLInstantIDPipeline.from_pretrained(
-    base_model_path,
-    controlnet=controlnet,
-    #torch_dtype=torch.float16,
-    torch_dtype=torch_dtype,
-    safety_checker=None,
-    feature_extractor=None,
-)
-if device == 'mps':
-    pipe.to("mps", torch_dtype)
-    pipe.enable_attention_slicing()
-elif device == 'cuda':
-    pipe.cuda()
-pipe.load_ip_adapter_instantid(face_adapter)
-#pipe.image_proj_model.to('cuda')
-#pipe.unet.to('cuda')
-if device == 'mps' or device == 'cuda':
-    pipe.image_proj_model.to(device)
-    pipe.unet.to(device)
+
 
 def randomize_seed_fn(seed: int, randomize_seed: bool) -> int:
     if randomize_seed:
@@ -161,28 +144,28 @@ def draw_kps(image_pil, kps, color_list=[(255,0,0), (0,255,0), (0,0,255), (255,2
     out_img_pil = Image.fromarray(out_img.astype(np.uint8))
     return out_img_pil
 
-def resize_img(input_image, max_side=1280, min_side=1024, size=None, 
-               pad_to_max_side=False, mode=PIL.Image.BILINEAR, base_pixel_number=64):
-
-        w, h = input_image.size
-        if size is not None:
-            w_resize_new, h_resize_new = size
-        else:
-            ratio = min_side / min(h, w)
-            w, h = round(ratio*w), round(ratio*h)
-            ratio = max_side / max(h, w)
-            input_image = input_image.resize([round(ratio*w), round(ratio*h)], mode)
-            w_resize_new = (round(ratio * w) // base_pixel_number) * base_pixel_number
-            h_resize_new = (round(ratio * h) // base_pixel_number) * base_pixel_number
-        input_image = input_image.resize([w_resize_new, h_resize_new], mode)
-
-        if pad_to_max_side:
-            res = np.ones([max_side, max_side, 3], dtype=np.uint8) * 255
-            offset_x = (max_side - w_resize_new) // 2
-            offset_y = (max_side - h_resize_new) // 2
-            res[offset_y:offset_y+h_resize_new, offset_x:offset_x+w_resize_new] = np.array(input_image)
-            input_image = Image.fromarray(res)
-        return input_image
+#def resize_img(input_image, max_side=820, min_side=678, size=None, 
+#              pad_to_max_side=False, mode=PIL.Image.BILINEAR, base_pixel_number=64):
+#
+#        w, h = input_image.size
+#        if size is not None:
+#            w_resize_new, h_resize_new = size
+#        else:
+#            ratio = min_side / min(h, w)
+#            w, h = round(ratio*w), round(ratio*h)
+#            ratio = max_side / max(h, w)
+#            input_image = input_image.resize([round(ratio*w), round(ratio*h)], mode)
+#            w_resize_new = (round(ratio * w) // base_pixel_number) * base_pixel_number
+#            h_resize_new = (round(ratio * h) // base_pixel_number) * base_pixel_number
+#        input_image = input_image.resize([w_resize_new, h_resize_new], mode)
+#
+#        if pad_to_max_side:
+#            res = np.ones([max_side, max_side, 3], dtype=np.uint8) * 255
+#            offset_x = (max_side - w_resize_new) // 2
+#            offset_y = (max_side - h_resize_new) // 2
+#            res[offset_y:offset_y+h_resize_new, offset_x:offset_x+w_resize_new] = np.array(input_image)
+#            input_image = Image.fromarray(res)
+#        return input_image
 
 def apply_style(style_name: str, positive: str, negative: str = "") -> tuple[str, str]:
     p, n = styles.get(style_name, styles[DEFAULT_STYLE_NAME])
@@ -430,4 +413,84 @@ with gr.Blocks(css=css) as demo:
     
     gr.Markdown(article)
 
-demo.launch(share=True)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--inbrowser', action='store_true', help='Open in browser')
+    parser.add_argument('--server_port', type=int, default=7860, help='Server port')
+    parser.add_argument('--share', action='store_true', help='Share the Gradio UI')
+    parser.add_argument('--model_path', type=str, default='stablediffusionapi/juggernaut-xl-v8', help='Base model path')
+    parser.add_argument('--medvram', action='store_true', help='Medium VRAM settings')
+    parser.add_argument('--lowvram', action='store_true', help='Low VRAM settings')
+
+    args = parser.parse_args()
+    
+    # Default values for max_side and min_side
+    max_side = 1280
+    min_side = 1024
+
+    # Adjust max_side and min_side based on the arguments
+    if args.medvram:
+        max_side, min_side = 1024, 832
+    elif args.lowvram:
+        max_side, min_side = 832, 640
+
+    # Display the current resolution settings
+    print(f"Current resolution settings: max_side = {max_side}, min_side = {min_side}")
+
+    # Modify the resize_img function call to pass max_side and min_side
+    def resize_img(input_image, size=None, pad_to_max_side=False, mode=PIL.Image.BILINEAR, base_pixel_number=64):
+        w, h = input_image.size
+        if size is not None:
+            w_resize_new, h_resize_new = size
+        else:
+            ratio = min_side / min(h, w)
+            w, h = round(ratio * w), round(ratio * h)
+            ratio = max_side / max(h, w)
+            input_image = input_image.resize([round(ratio * w), round(ratio * h)], mode)
+            w_resize_new = (round(ratio * w) // base_pixel_number) * base_pixel_number
+            h_resize_new = (round(ratio * h) // base_pixel_number) * base_pixel_number
+        input_image = input_image.resize([w_resize_new, h_resize_new], mode)
+
+        if pad_to_max_side:
+            res = np.ones([max_side, max_side, 3], dtype=np.uint8) * 255
+            offset_x = (max_side - w_resize_new) // 2
+            offset_y = (max_side - h_resize_new) // 2
+            res[offset_y:offset_y + h_resize_new, offset_x:offset_x + w_resize_new] = np.array(input_image)
+            input_image = Image.fromarray(res)
+        return input_image
+        
+
+    # Set the base_model_path based on the argument
+    base_model_path = args.model_path
+
+    # If no argument is provided, it defaults to 'stablediffusionapi/juggernaut-xl-v8'
+    
+    # Display only the arguments currently in use
+    print("Arguments currently in use:")
+    default_values = parser.parse_args([])
+    for arg, value in vars(args).items():
+        if value != getattr(default_values, arg):
+            print(f"  {arg}: {value}")
+            
+    pipe = StableDiffusionXLInstantIDPipeline.from_pretrained(
+    base_model_path,
+    controlnet=controlnet,
+    #torch_dtype=torch.float16,
+    torch_dtype=torch_dtype,
+    safety_checker=None,
+    feature_extractor=None,
+)
+if device == 'mps':
+    pipe.to("mps", torch_dtype)
+    pipe.enable_attention_slicing()
+elif device == 'cuda':
+    pipe.cuda()
+pipe.load_ip_adapter_instantid(face_adapter)
+#pipe.image_proj_model.to('cuda')
+#pipe.unet.to('cuda')
+if device == 'mps' or device == 'cuda':
+    pipe.image_proj_model.to(device)
+    pipe.unet.to(device)
+
+    demo.launch(inbrowser=args.inbrowser, server_port=args.server_port, share=args.share)
