@@ -6,9 +6,7 @@
 
 --model_path		Name of the sdxl model from huggingface   (the default model example: --model_path stablediffusionapi/juggernaut-xl-v8     diffuser model you can find here: https://huggingface.co/stablediffusionapi/juggernaut-xl-v8
 
---medvram			Medium vram settings, uses around 13GB, max image resolution of 1024
-
---lowvram			Low vram settings, uses a bit less than 13GB, max image resolution of 832
+--size			    Setup max and min size of image. Default is `1280 1024`, uses around 13GB. If you want to use less, set: `--size 832 640`, or your own values.
 
 
 

@@ -420,8 +420,6 @@ if __name__ == '__main__':
     parser.add_argument('--server_port', type=int, default=7860, help='Server port')
     parser.add_argument('--share', action='store_true', help='Share the Gradio UI')
     parser.add_argument('--model_path', type=str, default='stablediffusionapi/juggernaut-xl-v8', help='Base model path')
-    parser.add_argument('--medvram', action='store_true', help='Medium VRAM settings')
-    parser.add_argument('--lowvram', action='store_true', help='Low VRAM settings')
     parser.add_argument('--side', type=int, nargs=2, default=[1280, 1024], help='Maximum and minimum side resolution')
 
     args = parser.parse_args()
