@@ -420,20 +420,12 @@ if __name__ == '__main__':
     parser.add_argument('--server_port', type=int, default=7860, help='Server port')
     parser.add_argument('--share', action='store_true', help='Share the Gradio UI')
     parser.add_argument('--model_path', type=str, default='stablediffusionapi/juggernaut-xl-v8', help='Base model path')
-    parser.add_argument('--medvram', action='store_true', help='Medium VRAM settings')
-    parser.add_argument('--lowvram', action='store_true', help='Low VRAM settings')
+    parser.add_argument('--side', type=int, nargs=2, default=[1280, 1024], help='Maximum and minimum side resolution')
 
     args = parser.parse_args()
     
     # Default values for max_side and min_side
-    max_side = 1280
-    min_side = 1024
-
-    # Adjust max_side and min_side based on the arguments
-    if args.medvram:
-        max_side, min_side = 1024, 832
-    elif args.lowvram:
-        max_side, min_side = 832, 640
+    max_side, min_side = args.side
 
     # Display the current resolution settings
     print(f"Current resolution settings: max_side = {max_side}, min_side = {min_side}")
